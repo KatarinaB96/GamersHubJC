@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">GamersHub</string>
+    <string name="title_activity_game_on_boarding">GameOnBoardingActivity</string>
+    <string name="web_client_id">332308876461-o762vgckefjru30bchhnenv3q3sare6k.apps.googleusercontent.com</string>
+</resources>

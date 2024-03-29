@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "332308876461",
+    "project_id": "gamershub-4873a",
+    "storage_bucket": "gamershub-4873a.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:332308876461:android:b42c17c03cbb559d328a24",
+        "android_client_info": {
+          "package_name": "com.example.gamershub"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBfn4mHImXvMjXwbVSyqJb0a8W6SzYeeww"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
