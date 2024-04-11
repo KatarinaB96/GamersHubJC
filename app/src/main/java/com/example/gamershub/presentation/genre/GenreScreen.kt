@@ -47,6 +47,7 @@ fun GenreScreen(
     onGenresClick: (genres: List<GenreDetails>) -> Unit,
     sharedPreferences: DeviceSharedPreferences
 ) {
+
     val backgroundColor = colorResource(id = R.color.dark_gray)
     if (state.genre != null) {
         Column(
@@ -58,6 +59,7 @@ fun GenreScreen(
             GenresColumnWithGrids(data = state.genre.results, onItemSelected = { selectedItems ->
                 val genreIds = selectedItems.map { it.id }.joinToString(",")
                 sharedPreferences.setGenreIds(genreIds)
+
                 onGenresClick(selectedItems)
             })
         }
@@ -161,7 +163,7 @@ fun GenreDetailsItem(
             .clip(RoundedCornerShape(10.dp))
             .background(if (isSelected) Color.White else backgroundColor)
             .clickable { onItemClick(genreDetails) },
-        contentAlignment = Alignment.Center
+        contentAlignment = Center
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,

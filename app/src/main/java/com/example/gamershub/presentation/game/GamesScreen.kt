@@ -12,10 +12,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
-import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Settings
@@ -24,7 +24,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -43,57 +42,79 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.paging.LoadState
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
 import coil.compose.AsyncImage
 import com.example.gamershub.R
 import com.example.gamershub.domain.models.Game
-import com.example.gamershub.presentation.genre.GenresAndGamesViewModel
 
 import com.example.gamershub.presentation.ui.theme.DirtyWhite
 import com.smarttoolfactory.ratingbar.RatingBar
 import com.smarttoolfactory.ratingbar.model.GestureStrategy
 
 @Composable
-fun GamesScreen(state: GamesByGenreState, onGameClick: (game: Game) -> Unit, onSettingsClick: () -> Unit) {
+fun GamesScreen(
+                onGameClick: (game: Game) -> Unit,
+                onSettingsClick: () -> Unit) {
     val backgroundColor = colorResource(id = R.color.dark_gray)
 
-    if (state.game != null) {
-        Column(
+    val gamesViewModel = hiltViewModel<GamesViewModel>()
+    val gamesByGenreState = gamesViewModel.gamePager.collectAsLazyPagingItems()
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(backgroundColor)
+            .padding(horizontal = 16.dp)
+    ) {
+        Spacer(modifier = Modifier.height(16.dp))
+        GamesColumnWithGrids(listOfGames = gamesByGenreState, onGameClick = { game ->
+            onGameClick(game)
+        }, onSettingsClick)
+    }
+
+    //    else {
+    //        Box(
+    //            Modifier
+    //                .fillMaxSize()
+    //                .background(backgroundColor),
+    //            contentAlignment = Center
+    //        ) {
+    //            if (games.isLoading) {
+    //                CircularProgressIndicator()
+    //            } else if (games.error != null) {
+    //                Text(
+    //                    text = games.error,
+    //                    color = Color.Red,
+    //                    textAlign = TextAlign.Center,
+    //                    modifier = Modifier.align(Alignment.Center)
+    //                )
+    //            }
+    //        }
+    //    }
+}
+
+@Composable
+fun LoadingItem() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentHeight(), contentAlignment = Center
+    ) {
+        CircularProgressIndicator(
             modifier = Modifier
-                .fillMaxSize()
-                .background(backgroundColor)
-                .padding(horizontal = 16.dp)
-        ) {
-            Spacer(modifier = Modifier.height(16.dp))
-            state.game?.games?.let { listOfGames ->
-                GamesColumnWithGrids(data = listOfGames, onGameClick = { game ->
-                    onGameClick(game)
-                }, onSettingsClick)
-            }
-        }
-    } else {
-        Box(
-            Modifier
-                .fillMaxSize()
-                .background(backgroundColor),
-            contentAlignment = Center
-        ) {
-            if (state.isLoading) {
-                CircularProgressIndicator()
-            } else if (state.error != null) {
-                Text(
-                    text = state.error,
-                    color = Color.Red,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.align(Alignment.Center)
-                )
-            }
-        }
+                .width(42.dp)
+                .height(42.dp)
+                .padding(8.dp), strokeWidth = 5.dp
+        )
     }
 }
 
 @Composable
 fun GamesColumnWithGrids(
-    data: List<Game>,
+    listOfGames: LazyPagingItems<Game>,
     onGameClick: (game: Game) -> Unit,
     onSettingsClick: () -> Unit
 ) {
@@ -111,11 +132,28 @@ fun GamesColumnWithGrids(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalItemSpacing = 16.dp
         ) {
-            items(data) { item ->
-                GamesDetailsItem(
-                    { onGameClick(item) },
-                    game = item
-                )
+            items(listOfGames.itemCount) { item ->
+                listOfGames[item]?.let {
+                    GamesDetailsItem(
+                        { onGameClick(it) },
+                        game = it
+                    )
+                }
+            }
+            when (listOfGames.loadState.append) {
+                is LoadState.Error -> {
+                    item {
+
+                    }
+                }
+
+                LoadState.Loading -> {
+                    item {
+                        LoadingItem()
+                    }
+                }
+
+                is LoadState.NotLoading -> Unit
             }
         }
     }
@@ -163,7 +201,7 @@ fun GamesDetailsItem(
             .clip(RoundedCornerShape(10.dp))
             .background(backgroundColor)
             .clickable { onGameClick() },
-        contentAlignment = Alignment.Center
+        contentAlignment = Center
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,

@@ -5,7 +5,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.navigation.compose.rememberNavController
 import com.example.gamershub.data.preferences.DeviceSharedPreferences
 import com.example.gamershub.navigation.SetupNavGraph
 import com.example.gamershub.presentation.ui.theme.GamersHubTheme
@@ -23,8 +22,8 @@ class GameOnBoardingActivity : ComponentActivity() {
 
         setContent {
             GamersHubTheme {
-                val navController = rememberNavController()
-                SetupNavGraph(this, sharedPreferences, navController)
+
+                SetupNavGraph(this, sharedPreferences)
             }
         }
     }

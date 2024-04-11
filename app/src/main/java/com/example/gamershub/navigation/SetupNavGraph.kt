@@ -13,15 +13,16 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.example.gamershub.data.preferences.DeviceSharedPreferences
 import com.example.gamershub.presentation.game.GameDetailsScreen
 import com.example.gamershub.presentation.game.GameDetailsViewModel
 import com.example.gamershub.presentation.game.GamesScreen
+import com.example.gamershub.presentation.game.GamesViewModel
 import com.example.gamershub.presentation.genre.GenreScreen
-import com.example.gamershub.presentation.genre.GenresAndGamesViewModel
+import com.example.gamershub.presentation.genre.GenresViewModel
 import com.example.gamershub.presentation.settings.SettingsScreen
 import com.example.gamershub.presentation.sign_in.GoogleAuthUiClientImpl
 import com.example.gamershub.presentation.sign_in.SignInScreen
@@ -32,18 +33,18 @@ import kotlinx.coroutines.launch
 @Composable
 fun SetupNavGraph(
     lifecycleOwner: LifecycleOwner,
-    sharedPreferences: DeviceSharedPreferences,
-    navController: NavHostController
+    sharedPreferences: DeviceSharedPreferences
 ) {
+    val navController = rememberNavController()
     val context = LocalContext.current
     val googleAuthUiClient by lazy {
         GoogleAuthUiClientImpl(
             context = context, oneTapClient = Identity.getSignInClient(context)
         )
     }
-    val genresAndGamesViewModel = hiltViewModel<GenresAndGamesViewModel>()
-    val genreState = genresAndGamesViewModel.genreState
-    val gamesByGenreState = genresAndGamesViewModel.gamesByGenreState
+    val genresViewModel = hiltViewModel<GenresViewModel>()
+    val gamesViewModel = hiltViewModel<GamesViewModel>()
+    val genreState = genresViewModel.genreState
 
     val gameDetailsViewModel = hiltViewModel<GameDetailsViewModel>()
     val gameState = gameDetailsViewModel.gameState
@@ -59,7 +60,7 @@ fun SetupNavGraph(
 
             LaunchedEffect(key1 = Unit) {
                 if (googleAuthUiClient.getSignedInUser() != null || sharedPreferences.isSignedInAsGuest()) {
-                    genresAndGamesViewModel.loadGames(sharedPreferences.getGenreIds())
+                    gamesViewModel.loadGames(sharedPreferences.getGenreIds())
                     navController.navigate("GamesScreen")
                 }
             }
@@ -88,11 +89,12 @@ fun SetupNavGraph(
                             signInIntentSender ?: return@launch
                         ).build()
                     )
-                    genresAndGamesViewModel.loadGenres()
+                    genresViewModel.loadGenres()
                 }
             }, onSignInClick = {
                 sharedPreferences.setIsSignedInAsGuest(true)
-                genresAndGamesViewModel.loadGenres()
+                genresViewModel.loadGenres()
+                navController.popBackStack()
                 navController.navigate("GenreScreen")
             })
         }
@@ -100,7 +102,8 @@ fun SetupNavGraph(
             GenreScreen(
                 genreState,
                 onGenresClick = {
-                    genresAndGamesViewModel.loadGames(sharedPreferences.getGenreIds())
+                    gamesViewModel.loadGames(sharedPreferences.getGenreIds())
+                    navController.popBackStack()
                     navController.navigate("GamesScreen")
                 }, sharedPreferences
             )
@@ -108,13 +111,12 @@ fun SetupNavGraph(
 
         composable(route = Screen.GamesScreen.route) {
             GamesScreen(
-                gamesByGenreState,
                 onGameClick = { game ->
                     gameDetailsViewModel.loadGames(game.id)
                     navController.navigate("GameDetailsScreen")
-                }, onSettingsClick = {
-                    navController.navigate("SettingsScreen")
-                })
+                }) {
+                navController.navigate("SettingsScreen")
+            }
         }
 
         composable(route = Screen.GameDetailsScreen.route) {
@@ -127,14 +129,16 @@ fun SetupNavGraph(
                 onSignOut = {
                     lifecycleScope.launch {
                         googleAuthUiClient.signOut()
+                        navController.popBackStack()
                         navController.navigate("SignInScreen")
                     }
                 }, onReturnHome = {
                     sharedPreferences.setIsSignedInAsGuest(false)
+                    navController.popBackStack("GamesScreen", true)
                     navController.navigate("SignInScreen")
                 },
                 onChangeGenres = {
-                    genresAndGamesViewModel.loadGenres()
+                    genresViewModel.loadGenres()
                     navController.navigate("GenreScreen")
                 })
         }

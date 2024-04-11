@@ -25,7 +25,7 @@ android {
 
     buildTypes {
         debug {
-            buildConfigField("String", "API_KEY", "\"ef9505b8d1284093b1f01c9245b12fb5\"")
+            buildConfigField("String", "API_KEY", "\"\"")
             buildConfigField("String", "BASE_URL", "\"https://api.rawg.io/api/\"")
         }
         release {
@@ -113,6 +113,9 @@ dependencies {
     implementation ("com.github.SmartToolFactory:Compose-RatingBar:2.1.1")
 
     implementation ("androidx.datastore:datastore-preferences:1.0.0")
+
+    implementation ("androidx.paging:paging-runtime-ktx:3.2.1")
+    implementation ("androidx.paging:paging-compose:3.3.0-alpha05")
 
 }
 
